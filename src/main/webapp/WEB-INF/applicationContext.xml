@@ -1,0 +1,76 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:context="http://www.springframework.org/schema/context" xmlns:tx="http://www.springframework.org/schema/tx"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans
+         http://www.springframework.org/schema/beans/spring-beans-3.2.xsd
+         http://www.springframework.org/schema/context
+         http://www.springframework.org/schema/context/spring-context-3.2.xsd
+         http://www.springframework.org/schema/tx
+         http://www.springframework.org/schema/tx/spring-tx-3.2.xsd
+         http://www.springframework.org/schema/security
+         http://www.springframework.org/schema/security/spring-security-3.2.xsd">
+
+	<bean id="dataSource" class="org.apache.tomcat.jdbc.pool.DataSource"
+		destroy-method="close">
+		<property name="driverClassName" value="org.postgresql.Driver" />
+		<property name="url" value="jdbc:postgresql://localhost:5432/gefp" />
+		<property name="username" value="gefp" />
+		<property name="password" value="abcd" />
+		<property name="initialSize" value="1" />
+	</bean>
+
+	<bean id="entityManagerFactory"
+		class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean">
+		<property name="persistenceUnitName" value="gefp" />
+		<property name="dataSource" ref="dataSource" />
+	</bean>
+
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>
+
+	<bean
+		class="org.springframework.dao.annotation.PersistenceExceptionTranslationPostProcessor" />
+
+	<context:annotation-config />
+
+	<tx:annotation-driven />
+
+	<bean id="passwordEncoder"
+		class="org.springframework.security.authentication.encoding.Md5PasswordEncoder" />
+	<bean id="userService" class="gefp.security.UserDetailsServiceImpl" />
+	<bean id="authenticationSuccessHandler" class="gefp.security.AuthenticationSuccessHandler" />
+	
+	<security:authentication-manager>
+		<security:authentication-provider
+			user-service-ref="userService">
+			<security:password-encoder ref="passwordEncoder" />
+		</security:authentication-provider>
+	</security:authentication-manager>
+
+	<security:http use-expressions="true">
+		<security:form-login login-page="/login"
+			authentication-success-handler-ref="authenticationSuccessHandler" />
+		<security:logout logout-success-url="/login" />
+		<security:intercept-url pattern="/addCheckpoint" access="hasRole('ROLE_ADMIN')" />
+		<security:intercept-url pattern="/addPlan" access="hasRole('ROLE_ADMIN')" />
+		<security:intercept-url pattern="/addRunway" access="hasRole('ROLE_ADMIN')" />
+		<security:intercept-url pattern="/addStage" access="hasRole('ROLE_ADMIN')" />
+		<security:intercept-url pattern="/editCheckpoint" access="hasRole('ROLE_ADMIN')" />
+		<security:intercept-url pattern="/department" access="hasRole('ROLE_ADMIN')" />
+		<security:intercept-url pattern="/designate" access="hasRole('ROLE_ADMIN')" />
+		<security:intercept-url pattern="/studentPage" access="hasRole('ROLE_STUDENT')" />
+		<security:intercept-url pattern="/modify" access="hasRole('ROLE_STUDENT')" />
+		<security:intercept-url pattern="/advisorPage" access="hasRole('ROLE_ADVISOR')" />		
+		<security:intercept-url pattern="/detail" access="hasRole('ROLE_ADVISOR')" />
+		<security:intercept-url pattern="/main" access="authenticated" />
+	</security:http>
+
+	<security:global-method-security
+		pre-post-annotations="enabled" />
+
+	<context:component-scan base-package="gefp" />
+
+</beans>
